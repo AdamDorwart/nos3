@@ -1,0 +1,272 @@
+x-simulator-base: &simulator-base
+  image: ivvitc/nos3-64:20240618
+  volumes:
+    - ${BASE_DIR}:${BASE_DIR}
+    - ${SIM_DIR}:${SIM_DIR}
+    - /etc/passwd:/etc/passwd:ro
+    - /etc/group:/etc/group:ro
+  user: ${USER_ID}:${GROUP_ID}
+  working_dir: ${SIM_BIN}
+  environment:
+    - SC_NUM=${SC_NUM}
+    - SC_NETNAME=${SC_NETNAME}
+  tty: true
+  stdin_open: true
+  cap_add:
+    - SYS_PTRACE
+  security_opt:
+    - seccomp:unconfined
+
+      
+services:
+  openc3-operator:
+    image: ballaerospace/cosmos:4.5.0
+    volumes:
+      - ${BASE_DIR}:${BASE_DIR}
+      - /tmp/nos3:/tmp/nos3
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    working_dir: ${GSW_DIR}
+    networks:
+      nos3_core:
+        aliases:
+          - cosmos_openc3-operator_1
+      nos3_sc_1:
+        aliases:
+          - cosmos
+
+  nos_terminal:
+    <<: *simulator-base
+    networks:
+      nos3_core:
+        aliases:
+          - nos_terminal
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_nos_terminal
+    command: ./nos3-single-simulator ${GND_CFG_FILE} stdio-terminal
+
+  nos_udp_terminal:
+    <<: *simulator-base
+    networks:
+      nos3_core:
+        aliases:
+          - nos_udp_terminal
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_nos_udp_terminal
+    command: ./nos3-single-simulator ${GND_CFG_FILE} udp-terminal
+
+  fortytwo:
+    <<: *simulator-base
+    hostname: fortytwo
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_fortytwo
+          - fortytwo
+    volumes:
+      - ${USER_NOS3_DIR}:${USER_NOS3_DIR}
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    working_dir: ${USER_NOS3_DIR}/42
+    environment:
+      - DISPLAY=${DISPLAY}
+      - SC_NUM=${SC_NUM}
+      - SC_NETNAME=${SC_NETNAME}
+    command: ${USER_NOS3_DIR}/42/42 NOS3InOut
+
+  nos_fsw:
+    <<: *simulator-base
+    hostname: nos_fsw
+    volumes:
+      - ${BASE_DIR}:${BASE_DIR}
+    working_dir: ${FSW_DIR}
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_nos_fsw
+          - nos_fsw
+    sysctls:
+      - fs.mqueue.msg_max=10000
+    ulimits:
+      rtprio: 99
+    cap_add:
+      - SYS_NICE
+    command: ${SCRIPT_DIR}/fsw_respawn.sh
+
+  cryptolib:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_cryptolib
+          - cryptolib
+    working_dir: ${BASE_DIR}/gsw/build
+    command: ./support/standalone
+      
+  nos_engine_server:
+    <<: *simulator-base
+    hostname: nos_engine_server
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_nos_engine_server
+          - nos_engine_server
+    command: /usr/bin/nos_engine_server_standalone -f ${SIM_BIN}/nos_engine_server_config.json
+
+  truth42sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_truth42sim
+          - truth42sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} truth42sim
+
+
+  cam_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_cam_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} camsim
+    
+
+  css_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_css_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_css_sim
+
+  eps_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_eps_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_eps_sim
+
+  fss_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_fss_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_fss_sim
+
+  gps_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_gps_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} gps
+
+  imu_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_imu_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_imu_sim
+
+  mag_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_mag_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_mag_sim
+
+  rw_sim0:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_rw_sim0
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic-reactionwheel-sim0
+
+  rw_sim1:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_rw_sim0
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic-reactionwheel-sim1
+
+  rw_sim2:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_rw_sim2
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic-reactionwheel-sim2
+
+  radio_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_radio_sim
+          - radio_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_radio_sim
+
+  sample_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_sample_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} sample_sim
+
+  startrk_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_startrk_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_star_tracker_sim
+
+  torquer_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_torquer_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_torquer_sim
+
+  thruster_sim:
+    <<: *simulator-base
+    networks:
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_thruster_sim
+    command: ./nos3-single-simulator ${SC_CFG_FILE} generic_thruster_sim
+
+  nos_time_driver:
+    <<: *simulator-base
+    networks:
+      nos3_core:
+        aliases:
+          - nos_time_driver
+      nos3_sc_1:
+        aliases:
+          - ${SC_NUM}_nos_time_driver
+    command: ./nos3-single-simulator ${GND_CFG_FILE} time
+    volumes:
+      - ${BASE_DIR}:${BASE_DIR}
+
+networks:
+  nos3_core:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.41.0/24
+          gateway: 192.168.41.1
+  nos3_sc_1:
+    driver: bridge

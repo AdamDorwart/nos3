@@ -101,7 +101,7 @@ gsw:
 	./cfg/build/gsw_build.sh
 
 launch:
-	./scripts/docker_launch.sh
+	./scripts/docker_compose_launch2.sh
 
 log:
 	./scripts/log.sh
@@ -117,8 +117,9 @@ sim:
 	./scripts/docker_build_sim.sh
 
 stop:
-	./scripts/docker_stop.sh
-	./scripts/stop.sh
+	docker compose -f scripts/docker-compose.yml down
+	# ./scripts/docker_stop.sh
+	# ./scripts/stop.sh
 
 stop-gsw:
 	./scripts/stop_gsw.sh

@@ -9,7 +9,8 @@ The best source of documentation can be found at [the wiki](https://github.com/n
 Each of the applications listed below are required prior to performing the installation procedure:
 * Option A, you already use Linux
   * [Git 2.36+](https://git-scm.com/)
-  * Linux with docker and docker compose installed
+  * Ubuntu 22.04
+  * Docker 24.0.5
 * Option B, deployment of a virtual machine (VM)
   * [Git 2.36+](https://git-scm.com/)
   * [Vagrant 2.3.4+](https://www.vagrantup.com/)

@@ -15,3 +15,5 @@ core.*
 .cdskeyfile
 .reservedkeyfile
 .resetkeyfile
+.env
+scripts/.env
