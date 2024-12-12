@@ -5,6 +5,7 @@ BUILDTYPE ?= debug
 INSTALLPREFIX ?= exe
 FSWBUILDDIR ?= $(CURDIR)/fsw/build
 GSWBUILDDIR ?= $(CURDIR)/gsw/build
+OPENC3BUILDDIR ?= $(CURDIR)/gsw/openc3-cosmos-nos3/build
 SIMBUILDDIR ?= $(CURDIR)/sims/build
 
 export CFS_APP_PATH = ../components
@@ -47,25 +48,53 @@ all:
 	$(MAKE) gsw
 
 build-cryptolib:
-	mkdir -p $(GSWBUILDDIR)
-	cd $(GSWBUILDDIR) && cmake $(PREP_OPTS) -DSUPPORT=1 ../../components/cryptolib
+	cd $(GSWBUILDDIR) 
 	$(MAKE) --no-print-directory -C $(GSWBUILDDIR)
 
 build-fsw:
-	mkdir -p $(FSWBUILDDIR)
-	cd $(FSWBUILDDIR) && cmake $(PREP_OPTS) ../cfe
+	cd $(FSWBUILDDIR) 
 	$(MAKE) --no-print-directory -C $(FSWBUILDDIR) mission-install
 
+build-gsw:
+	cd $(OPENC3BUILDDIR)
+	$(MAKE) --no-print-directory -C $(OPENC3BUILDDIR)
+	cd $(OPENC3BUILDDIR)/openc3-cosmos-nos3 && ~/.nos3/cosmos/openc3.sh cli rake build VERSION=1.0
+	
 build-sim:
-	mkdir -p $(SIMBUILDDIR)
-	cd $(SIMBUILDDIR) && cmake -DCMAKE_INSTALL_PREFIX=$(SIMBUILDDIR) ..
+	cd $(SIMBUILDDIR) 
 	$(MAKE) --no-print-directory -C $(SIMBUILDDIR) install
 
 build-test:
-	mkdir -p $(FSWBUILDDIR)
-	cd $(FSWBUILDDIR) && cmake $(PREP_OPTS) -DENABLE_UNIT_TESTS=true ../cfe
+	cd $(FSWBUILDDIR)
 	$(MAKE) --no-print-directory -C $(FSWBUILDDIR) mission-install
 
+cmake:
+	$(MAKE) config
+	./scripts/docker_cmake_fsw.sh
+	$(MAKE) cmake-gsw
+	./scripts/docker_cmake_sim.sh
+	./scripts/docker_cmake_cryptolib.sh
+
+cmake-cryptolib:
+	mkdir -p $(GSWBUILDDIR)
+	cd $(GSWBUILDDIR) && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $(PREP_OPTS) -DSUPPORT=1 ../../components/cryptolib
+
+cmake-fsw:
+	mkdir -p $(FSWBUILDDIR)
+	cd $(FSWBUILDDIR) && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $(PREP_OPTS) ../cfe
+
+cmake-gsw:
+	mkdir -p $(OPENC3BUILDDIR)	
+	cd $(OPENC3BUILDDIR) && cmake -DBASE_DIR=$(CURDIR) -DGSW_DIR=$(CURDIR)/gsw/cosmos ..
+
+cmake-sim:
+	mkdir -p $(SIMBUILDDIR)
+	cd $(SIMBUILDDIR) && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_INSTALL_PREFIX=$(SIMBUILDDIR) ..
+
+cmake-test:
+	mkdir -p $(FSWBUILDDIR)
+	cd $(FSWBUILDDIR) && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $(PREP_OPTS) -DENABLE_UNIT_TESTS=true ../cfe
+	
 checkout:
 	./scripts/docker_checkout.sh
 
@@ -85,6 +114,7 @@ clean-sim:
 clean-gsw:
 	rm -rf gsw/build
 	rm -rf gsw/cosmos/build
+	rm -rf gsw/openc3-cosmos-nos3/build
 	rm -rf /tmp/nos3
 
 config:
@@ -96,12 +126,16 @@ debug:
 fsw: 
 	./scripts/docker_build_fsw.sh
 
-gsw:
+gsw: build-gsw
 	./scripts/docker_build_cryptolib.sh
-	./cfg/build/gsw_build.sh
+	# ./cfg/build/gsw_build.sh
 
 launch:
 	./scripts/docker_compose_launch2.sh
+
+launch-gsw:
+	docker compose -f ~/.nos3/cosmos/compose.yaml up -d
+	cd $(OPENC3BUILDDIR)/openc3-cosmos-nos3 && ~/.nos3/cosmos/openc3.sh cliroot load openc3-cosmos-nos3-1.0.gem
 
 log:
 	./scripts/log.sh
@@ -117,12 +151,14 @@ sim:
 	./scripts/docker_build_sim.sh
 
 stop:
+	docker network disconnect scripts_nos3_sc_1 cosmos-openc3-operator-1
 	docker compose -f scripts/docker-compose.yml down
 	# ./scripts/docker_stop.sh
 	# ./scripts/stop.sh
 
 stop-gsw:
-	./scripts/stop_gsw.sh
+	docker compose -f ~/.nos3/cosmos/compose.yaml down
+	# ./scripts/stop_gsw.sh
 
 test-fsw:
 	cd $(FSWBUILDDIR)/amd64-posix/default_cpu1 && ctest -O ctest.log

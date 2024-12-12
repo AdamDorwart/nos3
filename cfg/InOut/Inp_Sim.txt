@@ -4,14 +4,15 @@ NOS3                            !  Time Mode (FAST, REAL, EXTERNAL, or NOS3)
 86400.0   0.01                  !  Sim Duration, Step Size [sec]
 1.0                             !  File Output Interval [sec]
 0                               !  RNG Seed
-TRUE                            !  Graphics Front End?
+FALSE                            !  Graphics Front End?
 Inp_Cmd.txt                     !  Command Script File Name
 **************************  Reference Orbits  **************************
 1                               !  Number of Reference Orbits
 TRUE   Orb_LEO.txt              !  Input file name for Orb 0
 *****************************  Spacecraft  *****************************
-1                               !  Number of Spacecraft
+2                               !  Number of Spacecraft
 TRUE  0 SC_NOS3.txt             !  Existence, RefOrb, Input file for SC 0
+TRUE  0 SC_tube.txt             !  Existence, RefOrb, Input file for SC 0
 ***************************** Environment  *****************************
 10 18 2025                      !  Date (UTC) (Month, Day, Year)
 08 30 00.00                     !  Time (UTC) (Hr,Min,Sec)

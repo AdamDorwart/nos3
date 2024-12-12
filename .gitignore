@@ -17,3 +17,7 @@ core.*
 .resetkeyfile
 .env
 scripts/.env
+.cache
+.headers
+node_modules
+.clangd

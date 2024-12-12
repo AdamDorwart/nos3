@@ -5,7 +5,7 @@ GenScSpriteAlpha.ppm        !  Sprite File Name
 PASSIVE_FSW                 !  Flight Software Identifier
 0.2                         !  FSW Sample Time, sec
 ************************* Orbit Parameters ****************************
-FIXED                       !  Orbit Prop FIXED, EULER_HILL, ENCKE, or COWELL
+ENCKE                       !  Orbit Prop FIXED, EULER_HILL, ENCKE, or COWELL
 CM                          !  Pos of CM or ORIGIN, wrt F
 0.0  0.0  0.0               !  Pos wrt Formation (m), expressed in F
 0.0  0.0  0.0               !  Vel wrt Formation (m/s), expressed in F
@@ -102,7 +102,7 @@ NONE                        ! Drag/Jitter Input File Name
 4                           ! Number of Thrusters
 ==============================  Thr 0  =================================
 PROPORTIONAL                ! Mode (PULSED or PROPORTIONAL)
-0.01                        ! Thrust Force (N)
+100                           ! Thrust Force (N)
 1.0  0.0  0.0               ! Thrust Axis 
 0                           ! Body
 0                           ! Node

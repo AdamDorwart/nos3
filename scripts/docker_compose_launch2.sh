@@ -64,4 +64,5 @@ export SC_NETNAME="nos3_sc_1"
 
 # Launch the system
 docker compose -f $SCRIPT_DIR/docker-compose.yml up -d
+docker network connect scripts_nos3_sc_1 cosmos-openc3-operator-1 --alias cosmos
 docker compose -f $SCRIPT_DIR/docker-compose.yml logs -f

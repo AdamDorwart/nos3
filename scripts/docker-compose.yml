@@ -12,30 +12,31 @@ x-simulator-base: &simulator-base
     - SC_NETNAME=${SC_NETNAME}
   tty: true
   stdin_open: true
+  stop_grace_period: 1s
   cap_add:
     - SYS_PTRACE
   security_opt:
     - seccomp:unconfined
 
-      
+
 services:
-  openc3-operator:
-    image: ballaerospace/cosmos:4.5.0
-    volumes:
-      - ${BASE_DIR}:${BASE_DIR}
-      - /tmp/nos3:/tmp/nos3
-      - /tmp/.X11-unix:/tmp/.X11-unix:ro
-    environment:
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
-    working_dir: ${GSW_DIR}
-    networks:
-      nos3_core:
-        aliases:
-          - cosmos_openc3-operator_1
-      nos3_sc_1:
-        aliases:
-          - cosmos
+  # openc3-operator:
+  #   image: ballaerospace/cosmos:4.5.0
+  #   volumes:
+  #     - ${BASE_DIR}:${BASE_DIR}
+  #     - /tmp/nos3:/tmp/nos3
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:ro
+  #   environment:
+  #     - DISPLAY=${DISPLAY}
+  #     - QT_X11_NO_MITSHM=1
+  #   working_dir: ${GSW_DIR}
+  #   networks:
+  #     nos3_core:
+  #       aliases:
+  #         - cosmos_openc3-operator_1
+  #     nos3_sc_1:
+  #       aliases:
+  #         - cosmos
 
   nos_terminal:
     <<: *simulator-base
@@ -95,6 +96,11 @@ services:
     cap_add:
       - SYS_NICE
     command: ${SCRIPT_DIR}/fsw_respawn.sh
+    depends_on:
+      - nos_terminal
+      - nos_udp_terminal
+      - fortytwo
+      
 
   cryptolib:
     <<: *simulator-base
@@ -105,6 +111,8 @@ services:
           - cryptolib
     working_dir: ${BASE_DIR}/gsw/build
     command: ./support/standalone
+    depends_on:
+      - nos_fsw
       
   nos_engine_server:
     <<: *simulator-base
@@ -115,6 +123,8 @@ services:
           - ${SC_NUM}_nos_engine_server
           - nos_engine_server
     command: /usr/bin/nos_engine_server_standalone -f ${SIM_BIN}/nos_engine_server_config.json
+    depends_on:
+      - nos_fsw
 
   truth42sim:
     <<: *simulator-base
@@ -124,6 +134,8 @@ services:
           - ${SC_NUM}_truth42sim
           - truth42sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} truth42sim
+    depends_on:
+      - nos_fsw
 
 
   cam_sim:
@@ -133,6 +145,8 @@ services:
         aliases:
           - ${SC_NUM}_cam_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} camsim
+    depends_on:
+      - nos_engine_server
     
 
   css_sim:
@@ -142,6 +156,8 @@ services:
         aliases:
           - ${SC_NUM}_css_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_css_sim
+    depends_on:
+      - nos_engine_server
 
   eps_sim:
     <<: *simulator-base
@@ -150,6 +166,8 @@ services:
         aliases:
           - ${SC_NUM}_eps_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_eps_sim
+    depends_on:
+      - nos_engine_server
 
   fss_sim:
     <<: *simulator-base
@@ -158,6 +176,8 @@ services:
         aliases:
           - ${SC_NUM}_fss_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_fss_sim
+    depends_on:
+      - nos_engine_server
 
   gps_sim:
     <<: *simulator-base
@@ -166,6 +186,8 @@ services:
         aliases:
           - ${SC_NUM}_gps_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} gps
+    depends_on:
+      - nos_engine_server
 
   imu_sim:
     <<: *simulator-base
@@ -174,6 +196,8 @@ services:
         aliases:
           - ${SC_NUM}_imu_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_imu_sim
+    depends_on:
+      - nos_engine_server
 
   mag_sim:
     <<: *simulator-base
@@ -182,6 +206,8 @@ services:
         aliases:
           - ${SC_NUM}_mag_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_mag_sim
+    depends_on:
+      - nos_engine_server
 
   rw_sim0:
     <<: *simulator-base
@@ -190,6 +216,8 @@ services:
         aliases:
           - ${SC_NUM}_rw_sim0
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic-reactionwheel-sim0
+    depends_on:
+      - nos_engine_server
 
   rw_sim1:
     <<: *simulator-base
@@ -198,6 +226,8 @@ services:
         aliases:
           - ${SC_NUM}_rw_sim0
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic-reactionwheel-sim1
+    depends_on:
+      - nos_engine_server
 
   rw_sim2:
     <<: *simulator-base
@@ -206,6 +236,8 @@ services:
         aliases:
           - ${SC_NUM}_rw_sim2
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic-reactionwheel-sim2
+    depends_on:
+      - nos_engine_server
 
   radio_sim:
     <<: *simulator-base
@@ -215,6 +247,8 @@ services:
           - ${SC_NUM}_radio_sim
           - radio_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_radio_sim
+    depends_on:
+      - nos_engine_server
 
   sample_sim:
     <<: *simulator-base
@@ -223,6 +257,8 @@ services:
         aliases:
           - ${SC_NUM}_sample_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} sample_sim
+    depends_on:
+      - nos_engine_server
 
   startrk_sim:
     <<: *simulator-base
@@ -231,6 +267,8 @@ services:
         aliases:
           - ${SC_NUM}_startrk_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_star_tracker_sim
+    depends_on:
+      - nos_engine_server
 
   torquer_sim:
     <<: *simulator-base
@@ -239,6 +277,8 @@ services:
         aliases:
           - ${SC_NUM}_torquer_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_torquer_sim
+    depends_on:
+      - nos_engine_server
 
   thruster_sim:
     <<: *simulator-base
@@ -247,6 +287,8 @@ services:
         aliases:
           - ${SC_NUM}_thruster_sim
     command: ./nos3-single-simulator ${SC_CFG_FILE} generic_thruster_sim
+    depends_on:
+      - nos_engine_server
 
   nos_time_driver:
     <<: *simulator-base
@@ -260,6 +302,8 @@ services:
     command: ./nos3-single-simulator ${GND_CFG_FILE} time
     volumes:
       - ${BASE_DIR}:${BASE_DIR}
+    depends_on:
+      - thruster_sim
 
 networks:
   nos3_core:
